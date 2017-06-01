@@ -14,7 +14,7 @@
 
 
 void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int NoiseSensor, int Buzzer, int USTrigger, int USEcho) {
-  
+
   servo_pins[0] = YL;
   servo_pins[1] = YR;
   servo_pins[2] = RL;
@@ -30,13 +30,13 @@ void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int Noise
       servo[i].SetTrim(servo_trim);
     }
   }
-  
+
   for (int i = 0; i < 4; i++) servo_position[i] = 90;
 
   //US sensor init with the pins:
   us.init(USTrigger, USEcho);
 
-  //Buzzer & noise sensor pins: 
+  //Buzzer & noise sensor pins:
   pinBuzzer = Buzzer;
   pinNoiseSensor = NoiseSensor;
 
@@ -72,11 +72,11 @@ void Zowi::setTrims(int YL, int YR, int RL, int RR) {
 }
 
 void Zowi::saveTrimsOnEEPROM() {
-  
-  for (int i = 0; i < 4; i++){ 
+
+  for (int i = 0; i < 4; i++){
       EEPROM.write(i, servo[i].getTrim());
-  } 
-      
+  }
+
 }
 
 
@@ -132,14 +132,14 @@ void Zowi::_execute(int A[4], int O[4], int T, double phase_diff[4], float steps
   }
 
 
-  int cycles=(int)steps;    
+  int cycles=(int)steps;
 
   //-- Execute complete cycles
-  if (cycles >= 1) 
-    for(int i = 0; i < cycles; i++) 
+  if (cycles >= 1)
+    for(int i = 0; i < cycles; i++)
       oscillateServos(A,O, T, phase_diff);
-      
-  //-- Execute the final not complete cycle    
+
+  //-- Execute the final not complete cycle
   oscillateServos(A,O, T, phase_diff,(float)steps-cycles);
 }
 
@@ -191,7 +191,7 @@ void Zowi::jump(float steps, int T){
 
 
 //---------------------------------------------------------
-//-- Zowi gait: Walking  (forward or backward)    
+//-- Zowi gait: Walking  (forward or backward)
 //--  Parameters:
 //--    * steps:  Number of steps
 //--    * T : Period
@@ -211,7 +211,7 @@ void Zowi::walk(float steps, int T, int dir){
   double phase_diff[4] = {0, 0, DEG2RAD(dir * -90), DEG2RAD(dir * -90)};
 
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps);  
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -227,13 +227,13 @@ void Zowi::turn(float steps, int T, int dir){
   //-- Same coordination than for walking (see Zowi::walk)
   //-- The Amplitudes of the hip's oscillators are not igual
   //-- When the right hip servo amplitude is higher, the steps taken by
-  //--   the right leg are bigger than the left. So, the robot describes an 
+  //--   the right leg are bigger than the left. So, the robot describes an
   //--   left arc
   int A[4]= {30, 30, 20, 20};
   int O[4] = {0, 0, 4, -4};
-  double phase_diff[4] = {0, 0, DEG2RAD(-90), DEG2RAD(-90)}; 
-    
-  if (dir == LEFT) {  
+  double phase_diff[4] = {0, 0, DEG2RAD(-90), DEG2RAD(-90)};
+
+  if (dir == LEFT) {
     A[0] = 30; //-- Left hip servo
     A[1] = 10; //-- Right hip servo
   }
@@ -241,9 +241,9 @@ void Zowi::turn(float steps, int T, int dir){
     A[0] = 10;
     A[1] = 30;
   }
-    
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -257,14 +257,14 @@ void Zowi::turn(float steps, int T, int dir){
 void Zowi::bend (int steps, int T, int dir){
 
   //Parameters of all the movements. Default: Left bend
-  int bend1[4]={90, 90, 62, 35}; 
+  int bend1[4]={90, 90, 62, 35};
   int bend2[4]={90, 90, 62, 105};
   int homes[4]={90, 90, 90, 90};
 
   //Time of one bend, constrained in order to avoid movements too fast.
   //T=max(T, 600);
 
-  //Changes in the parameters if right direction is chosen 
+  //Changes in the parameters if right direction is chosen
   if(dir==-1)
   {
     bend1[2]=180-35;
@@ -274,7 +274,7 @@ void Zowi::bend (int steps, int T, int dir){
   }
 
   //Time of the bend movement. Fixed parameter to avoid falls
-  int T2=800; 
+  int T2=800;
 
   //Bend movement
   for (int i=0;i<steps;i++)
@@ -301,13 +301,13 @@ void Zowi::shakeLeg (int steps,int T,int dir){
   int numberLegMoves=2;
 
   //Parameters of all the movements. Default: Right leg
-  int shake_leg1[4]={90, 90, 58, 35};   
+  int shake_leg1[4]={90, 90, 58, 35};
   int shake_leg2[4]={90, 90, 58, 120};
   int shake_leg3[4]={90, 90, 58, 60};
   int homes[4]={90, 90, 90, 90};
 
   //Changes in the parameters if left leg is chosen
-  if(dir==-1)      
+  if(dir==-1)
   {
     shake_leg1[2]=180-35;
     shake_leg1[3]=180-58;
@@ -316,19 +316,19 @@ void Zowi::shakeLeg (int steps,int T,int dir){
     shake_leg3[2]=180-60;
     shake_leg3[3]=180-58;
   }
-  
+
   //Time of the bend movement. Fixed parameter to avoid falls
-  int T2=1000;    
-  //Time of one shake, constrained in order to avoid movements too fast.            
+  int T2=1000;
+  //Time of one shake, constrained in order to avoid movements too fast.
   T=T-T2;
-  T=max(T,200*numberLegMoves);  
+  T=max(T,200*numberLegMoves);
 
   for (int j=0; j<steps;j++)
   {
   //Bend movement
   _moveServos(T2/2,shake_leg1);
   _moveServos(T2/2,shake_leg2);
-  
+
     //Shake movement
     for (int i=0;i<numberLegMoves;i++)
     {
@@ -337,7 +337,7 @@ void Zowi::shakeLeg (int steps,int T,int dir){
     }
     _moveServos(500,homes); //Return to home position
   }
-  
+
   delay(T);
 }
 
@@ -347,7 +347,7 @@ void Zowi::shakeLeg (int steps,int T,int dir){
 //--  Parameters:
 //--    * steps: Number of jumps
 //--    * T: Period
-//--    * h: Jump height: SMALL / MEDIUM / BIG 
+//--    * h: Jump height: SMALL / MEDIUM / BIG
 //--              (or a number in degrees 0 - 90)
 //---------------------------------------------------------
 void Zowi::updown(float steps, int T, int h){
@@ -359,9 +359,9 @@ void Zowi::updown(float steps, int T, int h){
   int A[4]= {0, 0, h, h};
   int O[4] = {0, 0, h, -h};
   double phase_diff[4] = {0, 0, DEG2RAD(-90), DEG2RAD(90)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -379,9 +379,9 @@ void Zowi::swing(float steps, int T, int h){
   int A[4]= {0, 0, h, h};
   int O[4] = {0, 0, h/2, -h/2};
   double phase_diff[4] = {0, 0, DEG2RAD(0), DEG2RAD(0)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -399,18 +399,18 @@ void Zowi::tiptoeSwing(float steps, int T, int h){
   int A[4]= {0, 0, h, h};
   int O[4] = {0, 0, h, -h};
   double phase_diff[4] = {0, 0, 0, 0};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
 //---------------------------------------------------------
-//-- Zowi gait: Jitter 
+//-- Zowi gait: Jitter
 //--  Parameters:
 //--    steps: Number of jitters
-//--    T: Period of one jitter 
-//--    h: height (Values between 5 - 25)   
+//--    T: Period of one jitter
+//--    h: height (Values between 5 - 25)
 //---------------------------------------------------------
 void Zowi::jitter(float steps, int T, int h){
 
@@ -423,9 +423,9 @@ void Zowi::jitter(float steps, int T, int h){
   int A[4]= {h, h, 0, 0};
   int O[4] = {0, 0, 0, 0};
   double phase_diff[4] = {DEG2RAD(-90), DEG2RAD(90), 0, 0};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -434,7 +434,7 @@ void Zowi::jitter(float steps, int T, int h){
 //--  Parameters:
 //--    steps: Number of bends
 //--    T: Period of one bend
-//--    h: height (Values between 5 - 15) 
+//--    h: height (Values between 5 - 15)
 //---------------------------------------------------------
 void Zowi::ascendingTurn(float steps, int T, int h){
 
@@ -446,9 +446,9 @@ void Zowi::ascendingTurn(float steps, int T, int h){
   int A[4]= {h, h, h, h};
   int O[4] = {0, 0, h+4, -h+4};
   double phase_diff[4] = {DEG2RAD(-90), DEG2RAD(90), DEG2RAD(-90), DEG2RAD(90)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -471,14 +471,14 @@ void Zowi::moonwalker(float steps, int T, int h, int dir){
   //--  is 60 degrees.
   //--  Both amplitudes are equal. The offset is half the amplitud plus a little bit of
   //-   offset so that the robot tiptoe lightly
- 
+
   int A[4]= {0, 0, h, h};
   int O[4] = {0, 0, h/2+2, -h/2 -2};
   int phi = -dir * 90;
   double phase_diff[4] = {0, 0, DEG2RAD(phi), DEG2RAD(-60 * dir + phi)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -495,9 +495,9 @@ void Zowi::crusaito(float steps, int T, int h, int dir){
   int A[4]= {25, 25, h, h};
   int O[4] = {0, 0, h/2+ 4, -h/2 - 4};
   double phase_diff[4] = {90, 90, DEG2RAD(0), DEG2RAD(-60 * dir)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -514,9 +514,9 @@ void Zowi::flapping(float steps, int T, int h, int dir){
   int A[4]= {12, 12, h, h};
   int O[4] = {0, 0, h - 10, -h + 10};
   double phase_diff[4] = {DEG2RAD(0), DEG2RAD(180), DEG2RAD(-90 * dir), DEG2RAD(90 * dir)};
-  
+
   //-- Let's oscillate the servos!
-  _execute(A, O, T, phase_diff, steps); 
+  _execute(A, O, T, phase_diff, steps);
 }
 
 
@@ -544,7 +544,7 @@ int Zowi::getNoise(){
 
   int noiseLevel = 0;
   int noiseReadings = 0;
-  int numReadings = 2;  
+  int numReadings = 2;
 
     noiseLevel = analogRead(pinNoiseSensor);
 
@@ -564,7 +564,7 @@ int Zowi::getNoise(){
 //---------------------------------------------------------
 double Zowi::getBatteryLevel(){
 
-  //The first read of the batery is often a wrong reading, so we will discard this value. 
+  //The first read of the batery is often a wrong reading, so we will discard this value.
     double batteryLevel = battery.readBatPercent();
     double batteryReadings = 0;
     int numReadings = 10;
@@ -582,7 +582,7 @@ double Zowi::getBatteryLevel(){
 
 double Zowi::getBatteryVoltage(){
 
-  //The first read of the batery is often a wrong reading, so we will discard this value. 
+  //The first read of the batery is often a wrong reading, so we will discard this value.
     double batteryLevel = battery.readBatVoltage();
     double batteryReadings = 0;
     int numReadings = 10;
@@ -622,14 +622,14 @@ unsigned long int Zowi::getAnimShape(int anim, int index){
      0b00000000000000001100001100000000,
      0b00000000000000011000011000000000,
      0b00000000000000110000110000000000,
-     0b00000000000000011000011000000000  
+     0b00000000000000011000011000000000
   };
 
   unsigned long int dreamMouth_code[]={
      0b00000000000000000000110000110000,
-     0b00000000000000010000101000010000,  
+     0b00000000000000010000101000010000,
      0b00000000011000100100100100011000,
-     0b00000000000000010000101000010000           
+     0b00000000000000010000101000010000
   };
 
   unsigned long int adivinawi_code[]={
@@ -651,7 +651,7 @@ unsigned long int Zowi::getAnimShape(int anim, int index){
      0b00000000100000010000001001000110,
      0b00100000010000001000000100000011,
      0b00110000001000000100000010000001,
-     0b00011000100100000010000001000000    
+     0b00011000100100000010000001000000
   };
 
   switch  (anim){
@@ -667,8 +667,8 @@ unsigned long int Zowi::getAnimShape(int anim, int index){
         break;
     case wave:
         return wave_code[index];
-        break;    
-  }   
+        break;
+  }
 }
 
 
@@ -709,7 +709,7 @@ void Zowi::_tone (float noteFrequency, long noteDuration, int silentDuration){
       tone(Zowi::pinBuzzer, noteFrequency, noteDuration);
       delay(noteDuration);       //milliseconds to microseconds
       //noTone(PIN_Buzzer);
-      delay(silentDuration);     
+      delay(silentDuration);
 }
 
 
@@ -827,7 +827,7 @@ void Zowi::sing(int songName){
     break;
 
     case S_confused:
-      bendTones(1000, 1700, 1.03, 8, 2); 
+      bendTones(1000, 1700, 1.03, 8, 2);
       bendTones(1699, 500, 1.04, 8, 3);
       bendTones(1000, 1700, 1.05, 9, 10);
     break;
@@ -870,14 +870,14 @@ void Zowi::playGesture(int gesture){
   int bendPos_2[4]=   {90, 90, 55, 35};
   int bendPos_3[4]=   {90, 90, 42, 35};
   int bendPos_4[4]=   {90, 90, 34, 35};
-  
+
   switch(gesture){
 
-    case ZowiHappy: 
+    case ZowiHappy:
         _tone(note_E5,50,30);
         putMouth(smile);
         sing(S_happy_short);
-        swing(1,800,20); 
+        swing(1,800,20);
         sing(S_happy_short);
 
         home();
@@ -893,25 +893,23 @@ void Zowi::playGesture(int gesture){
         putMouth(happyOpen);
         sing(S_superHappy);
         putMouth(happyClosed);
-        tiptoeSwing(1,500,20); 
+        tiptoeSwing(1,500,20);
 
-        home();  
+        home();
         putMouth(happyOpen);
     break;
 
 
-    case ZowiSad: 
+    case ZowiSad:
         putMouth(sad);
-        _moveServos(700, sadPos);     
+        _moveServos(700, sadPos);
         bendTones(880, 830, 1.02, 20, 200);
         putMouth(sadClosed);
-        bendTones(830, 790, 1.02, 20, 200);  
+        bendTones(830, 790, 1.02, 20, 200);
         putMouth(sadOpen);
         bendTones(790, 740, 1.02, 20, 200);
         putMouth(sadClosed);
         bendTones(740, 700, 1.02, 20, 200);
-        putMouth(sadOpen);
-        bendTones(700, 669, 1.02, 20, 200);
         putMouth(sad);
         delay(500);
 
@@ -922,64 +920,64 @@ void Zowi::playGesture(int gesture){
 
 
     case ZowiSleeping:
-        _moveServos(700, bedPos);     
+        _moveServos(700, bedPos);
 
         for(int i=0; i<4;i++){
           putAnimationMouth(dreamMouth,0);
           bendTones (100, 200, 1.04, 10, 10);
           putAnimationMouth(dreamMouth,1);
-          bendTones (200, 300, 1.04, 10, 10);  
+          bendTones (200, 300, 1.04, 10, 10);
           putAnimationMouth(dreamMouth,2);
-          bendTones (300, 500, 1.04, 10, 10);   
+          bendTones (300, 500, 1.04, 10, 10);
           delay(500);
           putAnimationMouth(dreamMouth,1);
-          bendTones (400, 250, 1.04, 10, 1); 
+          bendTones (400, 250, 1.04, 10, 1);
           putAnimationMouth(dreamMouth,0);
-          bendTones (250, 100, 1.04, 10, 1); 
+          bendTones (250, 100, 1.04, 10, 1);
           delay(500);
-        } 
+        }
 
         putMouth(lineMouth);
         sing(S_cuddly);
 
-        home();  
+        home();
         putMouth(happyOpen);
     break;
 
 
     case ZowiFart:
         _moveServos(500,fartPos_1);
-        delay(300);     
+        delay(300);
         putMouth(lineMouth);
-        sing(S_fart1);  
+        sing(S_fart1);
         putMouth(tongueOut);
         delay(250);
         _moveServos(500,fartPos_2);
         delay(300);
         putMouth(lineMouth);
-        sing(S_fart2); 
+        sing(S_fart2);
         putMouth(tongueOut);
         delay(250);
         _moveServos(500,fartPos_3);
         delay(300);
         putMouth(lineMouth);
         sing(S_fart3);
-        putMouth(tongueOut);    
+        putMouth(tongueOut);
         delay(300);
 
-        home(); 
-        delay(500); 
+        home();
+        delay(500);
         putMouth(happyOpen);
     break;
 
 
     case ZowiConfused:
-        _moveServos(300, confusedPos); 
+        _moveServos(300, confusedPos);
         putMouth(confused);
         sing(S_confused);
         delay(500);
 
-        home();  
+        home();
         putMouth(happyOpen);
     break;
 
@@ -989,14 +987,14 @@ void Zowi::playGesture(int gesture){
         sing(S_cuddly);
         crusaito(2,1500,15,1);
 
-        home(); 
-        sing(S_happy_short);  
+        home();
+        sing(S_happy_short);
         putMouth(happyOpen);
     break;
 
 
-    case ZowiAngry: 
-        _moveServos(300, angryPos); 
+    case ZowiAngry:
+        _moveServos(300, angryPos);
         putMouth(angry);
 
         _tone(note_A5,100,30);
@@ -1006,17 +1004,17 @@ void Zowi::playGesture(int gesture){
         delay(15);
         bendTones(note_A5, note_E5, 1.02, 20, 4);
         delay(400);
-        _moveServos(200, headLeft); 
+        _moveServos(200, headLeft);
         bendTones(note_A5, note_D6, 1.02, 20, 4);
-        _moveServos(200, headRight); 
+        _moveServos(200, headRight);
         bendTones(note_A5, note_E5, 1.02, 20, 4);
 
-        home();  
+        home();
         putMouth(happyOpen);
     break;
 
 
-    case ZowiFretful: 
+    case ZowiFretful:
         putMouth(angry);
         bendTones(note_A5, note_D6, 1.02, 20, 4);
         bendTones(note_A5, note_E5, 1.02, 20, 4);
@@ -1024,14 +1022,14 @@ void Zowi::playGesture(int gesture){
         putMouth(lineMouth);
 
         for(int i=0; i<4; i++){
-          _moveServos(100, fretfulPos);   
+          _moveServos(100, fretfulPos);
           home();
         }
 
         putMouth(angry);
         delay(500);
 
-        home();  
+        home();
         putMouth(happyOpen);
     break;
 
@@ -1040,15 +1038,15 @@ void Zowi::playGesture(int gesture){
 
         //Initial note frecuency = 400
         //Final note frecuency = 1000
-        
-        // Reproduce the animation four times
-        for(int i = 0; i<4; i++){ 
 
-          int noteM = 400; 
+        // Reproduce the animation four times
+        for(int i = 0; i<4; i++){
+
+          int noteM = 400;
 
             for(int index = 0; index<6; index++){
               putAnimationMouth(adivinawi,index);
-              bendTones(noteM, noteM+100, 1.04, 10, 10);    //400 -> 1000 
+              bendTones(noteM, noteM+100, 1.04, 10, 10);    //400 -> 1000
               noteM+=100;
             }
 
@@ -1057,44 +1055,44 @@ void Zowi::playGesture(int gesture){
 
             for(int index = 0; index<6; index++){
               putAnimationMouth(adivinawi,index);
-              bendTones(noteM, noteM+100, 1.04, 10, 10);    //1000 -> 400 
+              bendTones(noteM, noteM+100, 1.04, 10, 10);    //1000 -> 400
               noteM-=100;
             }
-        } 
- 
+        }
+
         delay(300);
         putMouth(happyOpen);
     break;
 
 
     case ZowiWave:
-        
+
         // Reproduce the animation four times
-        for(int i = 0; i<2; i++){ 
+        for(int i = 0; i<2; i++){
 
-            int noteW = 500; 
+            int noteW = 500;
 
             for(int index = 0; index<10; index++){
               putAnimationMouth(wave,index);
-              bendTones(noteW, noteW+100, 1.02, 10, 10); 
+              bendTones(noteW, noteW+100, 1.02, 10, 10);
               noteW+=101;
             }
             for(int index = 0; index<10; index++){
               putAnimationMouth(wave,index);
-              bendTones(noteW, noteW+100, 1.02, 10, 10); 
+              bendTones(noteW, noteW+100, 1.02, 10, 10);
               noteW+=101;
             }
             for(int index = 0; index<10; index++){
               putAnimationMouth(wave,index);
-              bendTones(noteW, noteW-100, 1.02, 10, 10); 
+              bendTones(noteW, noteW-100, 1.02, 10, 10);
               noteW-=101;
             }
             for(int index = 0; index<10; index++){
               putAnimationMouth(wave,index);
-              bendTones(noteW, noteW-100, 1.02, 10, 10); 
+              bendTones(noteW, noteW-100, 1.02, 10, 10);
               noteW-=101;
             }
-        }    
+        }
 
         clearMouth();
         delay(100);
@@ -1102,11 +1100,11 @@ void Zowi::playGesture(int gesture){
     break;
 
     case ZowiVictory:
-        
+
         putMouth(smallSurprise);
         //final pos   = {90,90,150,30}
         for (int i = 0; i < 60; ++i){
-          int pos[]={90,90,90+i,90-i};  
+          int pos[]={90,90,90+i,90-i};
           _moveServos(10,pos);
           _tone(1600+i*20,15,1);
         }
@@ -1114,7 +1112,7 @@ void Zowi::playGesture(int gesture){
         putMouth(bigSurprise);
         //final pos   = {90,90,90,90}
         for (int i = 0; i < 60; ++i){
-          int pos[]={90,90,150-i,30+i};  
+          int pos[]={90,90,150-i,30+i};
           _moveServos(10,pos);
           _tone(2800+i*20,15,1);
         }
@@ -1125,7 +1123,7 @@ void Zowi::playGesture(int gesture){
         tiptoeSwing(1,500,20);
         sing(S_superHappy);
         putMouth(happyClosed);
-        tiptoeSwing(1,500,20); 
+        tiptoeSwing(1,500,20);
         //-----
 
         home();
@@ -1150,7 +1148,7 @@ void Zowi::playGesture(int gesture){
 
         detachServos();
         _tone(150,2200,1);
-        
+
         delay(600);
         clearMouth();
         putMouth(happyOpen);
@@ -1159,4 +1157,5 @@ void Zowi::playGesture(int gesture){
     break;
 
   }
-}    
+
+}

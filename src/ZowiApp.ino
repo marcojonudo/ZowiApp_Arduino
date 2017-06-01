@@ -29,6 +29,9 @@ ZowiSerialCommand SCmd;  //The SerialCommand object
 #include <Zowi.h>
 Zowi zowi;  //This is Zowi!!
 
+#include <AndroidApp.h>
+AndroidApp androidApp; //Android app functions
+
 //---------------------------------------------------------
 //-- Configuration of pins where the servos are attached
 /*
@@ -60,7 +63,7 @@ Zowi zowi;  //This is Zowi!!
 //-- Global Variables -------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 
-const char programID[]="ZOWI_BASE_v2"; //Each program will have a ID
+const char programID[]="SUPER_ZOWI"; //Each program will have a ID
 
 const char name_fac='$'; //Factory name
 const char name_fir='#'; //First name
@@ -90,131 +93,138 @@ int randomDance=0;
 int randomSteps=0;
 
 bool obstacleDetected = false;
+bool connectedToApp = false;
 
+long matrixCode;
 
 ///////////////////////////////////////////////////////////////////
 //-- Setup ------------------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 void setup(){
 
-  //Serial communication initialization
-  Serial.begin(115200);
+    //Serial communication initialization
+    Serial.begin(115200);
 
-  pinMode(PIN_SecondButton,INPUT);
-  pinMode(PIN_ThirdButton,INPUT);
+    pinMode(PIN_SecondButton,INPUT);
+    pinMode(PIN_ThirdButton,INPUT);
 
-  //Set the servo pins
-  zowi.init(PIN_YL,PIN_YR,PIN_RL,PIN_RR,true);
+    //Set the servo pins
+    zowi.init(PIN_YL, PIN_YR, PIN_RL, PIN_RR, true);
 
-  //Uncomment this to set the servo trims manually and save on EEPROM
+    //Uncomment this to set the servo trims manually and save on EEPROM
     //zowi.setTrims(TRIM_YL, TRIM_YR, TRIM_RL, TRIM_RR);
     //zowi.saveTrimsOnEEPROM(); //Uncomment this only for one upload when you finaly set the trims.
 
-  //Set a random seed
-  randomSeed(analogRead(A6));
+    //Set a random seed
+    randomSeed(analogRead(A6));
 
-  //Interrumptions
-  enableInterrupt(PIN_SecondButton, secondButtonPushed, RISING);
-  enableInterrupt(PIN_ThirdButton, thirdButtonPushed, RISING);
+    //Interrumptions
+    enableInterrupt(PIN_SecondButton, secondButtonPushed, RISING);
+    enableInterrupt(PIN_ThirdButton, thirdButtonPushed, RISING);
 
-  //Setup callbacks for SerialCommand commands
-  SCmd.addCommand("S", receiveStop);      //  sendAck & sendFinalAck
-  SCmd.addCommand("L", receiveLED);       //  sendAck & sendFinalAck
-  SCmd.addCommand("T", recieveBuzzer);    //  sendAck & sendFinalAck
-  SCmd.addCommand("M", receiveMovement);  //  sendAck & sendFinalAck
-  SCmd.addCommand("H", receiveGesture);   //  sendAck & sendFinalAck
-  SCmd.addCommand("K", receiveSing);      //  sendAck & sendFinalAck
-  SCmd.addCommand("C", receiveTrims);     //  sendAck & sendFinalAck
-  SCmd.addCommand("G", receiveServo);     //  sendAck & sendFinalAck
-  SCmd.addCommand("R", receiveName);      //  sendAck & sendFinalAck
-  SCmd.addCommand("E", requestName);
-  SCmd.addCommand("D", requestDistance);
-  SCmd.addCommand("N", requestNoise);
-  SCmd.addCommand("B", requestBattery);
-  SCmd.addCommand("I", requestProgramId);
-  SCmd.addDefaultHandler(receiveStop);
-
-
-
-  //Zowi wake up!
-  zowi.sing(S_connection);
-  zowi.home();
-
-
-  //If Zowi's name is '&' (factory name) means that is the first time this program is executed.
-  //This first time, Zowi mustn't do anything. Just born at the factory!
-  //5 = EEPROM address that contains first name character
-  if (EEPROM.read(5)==name_fac){
-
-    EEPROM.put(5, name_fir); //From now, the name is '#'
-    EEPROM.put(6, '\0');
-    zowi.putMouth(culito);
-
-    while(true){
-       delay(1000);
-    }
-  }
+    //Setup callbacks for SerialCommand commands
+    // SCmd.addCommand("S", receiveStop);      //  sendAck & sendFinalAck
+    // SCmd.addCommand("L", receiveLED);       //  sendAck & sendFinalAck
+    // SCmd.addCommand("T", recieveBuzzer);    //  sendAck & sendFinalAck
+    // SCmd.addCommand("M", receiveMovement);  //  sendAck & sendFinalAck
+    // SCmd.addCommand("H", receiveGesture);   //  sendAck & sendFinalAck
+    // SCmd.addCommand("K", receiveSing);      //  sendAck & sendFinalAck
+    // SCmd.addCommand("C", receiveTrims);     //  sendAck & sendFinalAck
+    // SCmd.addCommand("G", receiveServo);     //  sendAck & sendFinalAck
+    // SCmd.addCommand("R", receiveName);      //  sendAck & sendFinalAck
+    // SCmd.addCommand("E", requestName);
+    // SCmd.addCommand("D", requestDistance);
+    // SCmd.addCommand("N", requestNoise);
+    // SCmd.addCommand("B", requestBattery);
+    // SCmd.addCommand("I", requestProgramId);
+    SCmd.addCommand("C", checkActivity);
+    SCmd.addCommand("D", checkActivityMouth);
+    SCmd.addCommand("E", checkActivityZowi);
+    SCmd.addCommand("S", sonar);
+    SCmd.addCommand("O", operations);
+    // SCmd.addCommand("O2", androidApp.operations);
+    // SCmd.addCommand("G", androidApp.grid);
+    SCmd.addDefaultHandler(receiveStop);
 
 
-  //Send Zowi name, programID & battery level.
-  requestName();
-  delay(50);
-  requestProgramId();
-  delay(50);
-  requestBattery();
 
-  //Checking battery
-  ZowiLowBatteryAlarm();
+    //Zowi wake up!
+    zowi.sing(S_connection);
+    zowi.home();
 
-
- // Animation Uuuuuh - A little moment of initial surprise
- //-----
-  for(int i=0; i<2; i++){
-      for (int i=0;i<8;i++){
-        if(buttonPushed){break;}
-        zowi.putAnimationMouth(littleUuh,i);
-        delay(150);
-      }
-  }
- //-----
+    //If Zowi's name is '&' (factory name) means that is the first time this program is executed.
+    //This first time, Zowi mustn't do anything. Just born at the factory!
+    //5 = EEPROM address that contains first name character
+    // if (EEPROM.read(5)==name_fac){
+    //
+    //   EEPROM.put(5, name_fir); //From now, the name is '#'
+    //   EEPROM.put(6, '\0');
+    //   zowi.putMouth(culito);
+    //
+    //   while(true){
+    //      delay(1000);
+    //   }
+    // }
 
 
-  //Smile for a happy Zowi :)
-  if(!buttonPushed){
-    zowi.putMouth(smile);
-    zowi.sing(S_happy);
-    delay(200);
-  }
+    //Send Zowi name, programID & battery level.
+    requestName();
+    delay(50);
+    requestProgramId();
+    delay(50);
+    requestBattery();
+
+    //Checking battery
+    ZowiLowBatteryAlarm();
 
 
-  //If Zowi's name is '#' means that Zowi hasn't been baptized
-  //In this case, Zowi does a longer greeting
-  //5 = EEPROM address that contains first name character
-  if (EEPROM.read(5)==name_fir){
+    // Animation Uuuuuh - A little moment of initial surprise
+    //-----
+    // for(int i=0; i<2; i++){
+    //     for (int i=0;i<8;i++){
+    //         if(buttonPushed){break;}
+    //         zowi.putAnimationMouth(littleUuh,i);
+    //         delay(150);
+    //     }
+    // }
+    //-----
+
+
+    //Smile for a happy Zowi :)
+    // if(!buttonPushed){
+    //     zowi.putMouth(smile);
+    //     zowi.sing(S_happy);
+    //     delay(200);
+    // }
+
+
+    //If Zowi's name is '#' means that Zowi hasn't been baptized
+    //In this case, Zowi does a longer greeting
+    //5 = EEPROM address that contains first name character
+    // if (EEPROM.read(5)==name_fir){
+    //
+    //   if(!buttonPushed){
+    //       zowi.jump(1,700);
+    //       delay(200);
+    //   }
+    //
+    //   if(!buttonPushed){
+    //       zowi.shakeLeg(1,T,1);
+    //   }
+    //
+    //   if(!buttonPushed){
+    //       zowi.putMouth(smallSurprise);
+    //       zowi.swing(2,800,20);
+    //       zowi.home();
+    //   }
+    // }
+
 
     if(!buttonPushed){
-        zowi.jump(1,700);
-        delay(200);
+        zowi.putMouth(happyOpen);
     }
 
-    if(!buttonPushed){
-        zowi.shakeLeg(1,T,1);
-    }
-
-    if(!buttonPushed){
-        zowi.putMouth(smallSurprise);
-        zowi.swing(2,800,20);
-        zowi.home();
-    }
-  }
-
-
-  if(!buttonPushed){
-    zowi.putMouth(happyOpen);
-  }
-
-  previousMillis = millis();
-
+    previousMillis = millis();
 }
 
 
@@ -223,200 +233,180 @@ void setup(){
 //-- Principal Loop ---------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 void loop() {
+    if (Serial.available() > 0 && MODE != 4) {
+        MODE=4;
+        zowi.putMouth(tongueOut);
 
+        //Disable Pin Interruptions
+        disableInterrupt(PIN_SecondButton);
+        disableInterrupt(PIN_ThirdButton);
 
-  if (Serial.available()>0 && MODE!=4){
-
-    MODE=4;
-    zowi.putMouth(happyOpen);
-
-    //Disable Pin Interruptions
-    disableInterrupt(PIN_SecondButton);
-    disableInterrupt(PIN_ThirdButton);
-
-    buttonPushed=false;
-  }
-
-
-  //First attemp to initial software
-  if (buttonPushed){
-
-    zowi.home();
-
-    delay(100); //Wait for all buttons
-    zowi.sing(S_buttonPushed);
-    delay(200); //Wait for all buttons
-
-    if      ( buttonAPushed && !buttonBPushed){ MODE=1; zowi.sing(S_mode1);}
-    else if (!buttonAPushed && buttonBPushed) { MODE=2; zowi.sing(S_mode2);}
-    else if ( buttonAPushed && buttonBPushed) { MODE=3; zowi.sing(S_mode3);} //else
-
-    zowi.putMouth(MODE);
-
-    int showTime = 2000;
-    while((showTime>0)){ //Wait to show the MODE number
-
-        showTime-=10;
-        delay(10);
+        buttonPushed = false;
     }
 
-    zowi.putMouth(happyOpen);
+    //First attemp to initial software
+    if (buttonPushed) {
+        zowi.home();
 
-    buttonPushed=false;
-    buttonAPushed=false;
-    buttonBPushed=false;
+        delay(100); //Wait for all buttons
+        zowi.sing(S_buttonPushed);
+        delay(200); //Wait for all buttons
 
-  }else{
+        if      ( buttonAPushed && !buttonBPushed){ MODE=1; zowi.sing(S_mode1);}
+        else if (!buttonAPushed && buttonBPushed) { MODE=2; zowi.sing(S_mode2);}
+        else if ( buttonAPushed && buttonBPushed) { MODE=3; zowi.sing(S_mode3);} //else
 
-    switch (MODE) {
+        zowi.putMouth(MODE);
 
-      //-- MODE 0 - Zowi is awaiting
-      //---------------------------------------------------------
-      case 0:
-
-        //Every 80 seconds in this mode, Zowi falls asleep
-        if (millis()-previousMillis>=80000){
-            ZowiSleeping_withInterrupts(); //ZZzzzzz...
-            previousMillis=millis();
+        int showTime = 2000;
+        while(showTime > 0) { //Wait to show the MODE number
+            showTime -= 10;
+            delay(10);
         }
 
-        break;
+        zowi.putMouth(happyOpen);
 
-
-      //-- MODE 1 - Dance Mode!
-      //---------------------------------------------------------
-      case 1:
-
-        randomDance=random(5,21); //5,20
-        if((randomDance>14)&&(randomDance<19)){
-            randomSteps=1;
-            T=1600;
-        }
-        else{
-            randomSteps=random(3,6); //3,5
-            T=1000;
-        }
-
-        zowi.putMouth(random(10,21));
-
-        for (int i=0;i<randomSteps;i++){
-            move(randomDance);
-            if(buttonPushed){break;}
-        }
-        break;
-
-
-      //-- MODE 2 - Obstacle detector mode
-      //---------------------------------------------------------
-      case 2:
-
-        if(obstacleDetected){
-
-            if(!buttonPushed){
-              zowi.putMouth(bigSurprise);
-              zowi.sing(S_surprise);
-              zowi.jump(5, 500);
-            }
-
-            if(!buttonPushed){
-              zowi.putMouth(confused);
-              zowi.sing(S_cuddly);
-            }
-
-            //Zowi takes two steps back
-            for(int i=0;i<3;i++){
-              if(buttonPushed){break;}
-              zowi.walk(1,1300,-1);
-            }
-
-            delay(100);
-            obstacleDetector();
-            delay(100);
-
-
-           //If there are no obstacles and no button is pressed, Zowi shows a smile
-           if((obstacleDetected==true)||(buttonPushed==true)){break;}
-           else{
-              zowi.putMouth(smile);
-              delay(50);
-              obstacleDetector();
-           }
-
-
-           //If there are no obstacles and no button is pressed, Zowi shows turns left
-           for(int i=0; i<3; i++){
-              if((obstacleDetected==true)||(buttonPushed==true)){break;}
-              else{
-                  zowi.turn(1,1000,1);
-                  obstacleDetector();
-              }
-           }
-
-            //If there are no obstacles and no button is pressed, Zowi is happy
-            if((obstacleDetected==true)||(buttonPushed==true)){break;}
-            else{
-                zowi.home();
-                zowi.putMouth(happyOpen);
-                zowi.sing(S_happy_short);
-                delay(200);
-            }
-
-
-        }else{
-
-            zowi.walk(1,1000,1); //Zowi walk straight
-            obstacleDetector();
-        }
-
-        break;
-
-
-      //-- MODE 3 - Noise detector mode
-      //---------------------------------------------------------
-      case 3:
-        if (zowi.getNoise()>=650){ //740
-
-          delay(50);  //Wait for the possible 'lag' of the button interruptions.
-                      //Sometimes, the noise sensor detect the button before the interruption takes efect
-
-          if(!buttonPushed){
-
-            zowi.putMouth(bigSurprise);
-            zowi.sing(S_OhOoh);
-
-            if(buttonPushed){break;}
-            zowi.putMouth(random(10,21));
-            randomDance=random(5,21);
-            move(randomDance);
-            zowi.home();
-            delay(500); //Wait for possible noise of the servos while get home
-          }
-
-          if(!buttonPushed){zowi.putMouth(happyOpen);}
-        }
-        break;
-
-
-      //-- MODE 4 - ZowiPAD or any Teleoperation mode (listening SerialPort)
-      //---------------------------------------------------------
-      case 4:
-
-        SCmd.readSerial();
-
-        //If Zowi is moving yet
-        if (zowi.getRestState()==false){
-          move(moveId);
-        }
-
-        break;
-
-
-      default:
-          MODE=4;
-          break;
+        buttonPushed = false;
+        buttonAPushed = false;
+        buttonBPushed = false;
     }
+    else {
+        switch (MODE) {
+        //-- MODE 0 - Zowi is awaiting
+        //---------------------------------------------------------
+        case 0:
+            //Every 80 seconds in this mode, Zowi falls asleep
+            if (millis() - previousMillis >= 80000){
+                ZowiSleeping_withInterrupts(); //ZZzzzzz...
+                previousMillis = millis();
+            }
+        break;
+        //-- MODE 1 - Dance Mode!
+        //---------------------------------------------------------
+        case 1:
+            // TODO Definir acción para el botón 1
+            // randomDance=random(5,21); //5,20
+            // if((randomDance>14)&&(randomDance<19)){
+            //     randomSteps=1;
+            //     T=1600;
+            // }
+            // else{
+            //     randomSteps=random(3,6); //3,5
+            //     T=1000;
+            // }
+            //
+            // zowi.putMouth(random(10,21));
+            //
+            // for (int i=0;i<randomSteps;i++){
+            //     move(randomDance);
+            //     if(buttonPushed){break;}
+            // }
+            break;
+        //-- MODE 2 - Obstacle detector mode
+        //---------------------------------------------------------
+        case 2:
+            // TDOO Definir acción para el botón 2
+            // if(obstacleDetected){
+            //
+            //     if(!buttonPushed){
+            //       zowi.putMouth(bigSurprise);
+            //       zowi.sing(S_surprise);
+            //       zowi.jump(5, 500);
+            //     }
+            //
+            //     if(!buttonPushed){
+            //       zowi.putMouth(confused);
+            //       zowi.sing(S_cuddly);
+            //     }
+            //
+            //     //Zowi takes two steps back
+            //     for(int i=0;i<3;i++){
+            //       if(buttonPushed){break;}
+            //       zowi.walk(1,1300,-1);
+            //     }
+            //
+            //     delay(100);
+            //     obstacleDetector();
+            //     delay(100);
+            //
+            //
+            //    //If there are no obstacles and no button is pressed, Zowi shows a smile
+            //    if((obstacleDetected==true)||(buttonPushed==true)){break;}
+            //    else{
+            //       zowi.putMouth(smile);
+            //       delay(50);
+            //       obstacleDetector();
+            //    }
+            //
+            //
+            //    //If there are no obstacles and no button is pressed, Zowi shows turns left
+            //    for(int i=0; i<3; i++){
+            //       if((obstacleDetected==true)||(buttonPushed==true)){break;}
+            //       else{
+            //           zowi.turn(1,1000,1);
+            //           obstacleDetector();
+            //       }
+            //    }
+            //
+            //     //If there are no obstacles and no button is pressed, Zowi is happy
+            //     if((obstacleDetected==true)||(buttonPushed==true)){break;}
+            //     else{
+            //         zowi.home();
+            //         zowi.putMouth(happyOpen);
+            //         zowi.sing(S_happy_short);
+            //         delay(200);
+            //     }
+            //
+            //
+            // }else{
+            //
+            //     zowi.walk(1,1000,1); //Zowi walk straight
+            //     obstacleDetector();
+            // }
 
-  }
+            break;
+        //-- MODE 3 - Noise detector mode
+        //---------------------------------------------------------
+        case 3:
+            // TODO Definir acción para los botones 1 y 2 a la vez
+            // if (zowi.getNoise()>=650){ //740
+            //
+            //   delay(50);  //Wait for the possible 'lag' of the button interruptions.
+            //               //Sometimes, the noise sensor detect the button before the interruption takes efect
+            //
+            //   if(!buttonPushed){
+            //
+            //     zowi.putMouth(bigSurprise);
+            //     zowi.sing(S_OhOoh);
+            //
+            //     if(buttonPushed){break;}
+            //     zowi.putMouth(random(10,21));
+            //     randomDance=random(5,21);
+            //     move(randomDance);
+            //     zowi.home();
+            //     delay(500); //Wait for possible noise of the servos while get home
+            //   }
+            //
+            //   if(!buttonPushed){zowi.putMouth(happyOpen);}
+            // }
+            break;
+        //-- MODE 4 - ZowiPAD or any Teleoperation mode (listening SerialPort)
+        //---------------------------------------------------------
+        case 4:
+            SCmd.readSerial();
+
+            //If Zowi is moving yet
+            if (zowi.getRestState() == false){
+                move(moveId);
+            }
+
+            break;
+        default:
+            MODE=4;
+            break;
+        }
+
+    }
 
 }
 
@@ -583,6 +573,132 @@ void receiveTrims(){
 
 }
 
+void checkActivity() {
+
+    //sendAck & stop if necessary
+    sendAck();
+    zowi.home();
+
+    int responseType;
+
+    //Examples of checkActivity Bluetooth commands
+    //C 1
+    //C 2
+    char *arg;
+    arg = SCmd.next();
+
+    if (arg != NULL) {
+        responseType = atoi(arg);
+        androidApp.checkActivity(zowi, responseType);
+    }
+    else {
+        zowi.putMouth(interrogation);
+        delay(2000);
+        zowi.clearMouth();
+    }
+
+    sendFinalAck();
+}
+
+void checkActivityMouth() {
+
+    //sendAck & stop if necessary
+    sendAck();
+    zowi.home();
+
+    int responseType;
+
+    //Bluetooth commands: D 1, D 2
+    char *arg;
+    arg = SCmd.next();
+
+    if (arg != NULL) {
+        responseType = atoi(arg);
+        androidApp.checkActivity(zowi, responseType, false);
+    }
+    else {
+        zowi.putMouth(interrogation);
+        delay(2000);
+        zowi.clearMouth();
+    }
+
+    sendFinalAck();
+}
+
+void checkActivityZowi() {
+
+    //sendAck & stop if necessary
+    sendAck();
+    zowi.home();
+
+    zowi.putMouth(interrogation);
+
+    int distance = zowi.getDistance();
+
+    /* Loop to wait for the tablet to be next to Zowy's eyes */
+    while (distance > 10) {
+        distance = zowi.getDistance();
+    }
+    distance = 11;
+
+    sendFinalAck();
+}
+
+void sonar() {
+
+    //sendAck & stop if necessary
+    sendAck();
+    zowi.home();
+
+    int sonarTone;
+
+    char *arg;
+    arg = SCmd.next();
+
+    if (arg != NULL) {
+        sonarTone = atoi(arg);
+        androidApp.sonar(zowi, sonarTone);
+    }
+    else {
+        zowi.putMouth(interrogation);
+        delay(2000);
+        zowi.clearMouth();
+    }
+
+    sendFinalAck();
+}
+
+void operations() {
+
+    //sendAck & stop if necessary
+    sendAck();
+    zowi.home();
+
+    char *arg;
+    arg = SCmd.next();
+    int bufferCounter = 0;
+    while (arg != NULL) {
+        int bitshift = 24;
+        unsigned long row;
+        for (int i=0; i<5; i++) {
+            row = arg[i]-'0';
+            matrixCode = matrixCode | row << bitshift;
+            bitshift = bitshift - 6;
+        }
+        Serial.print("code: "); Serial.println(matrixCode, BIN);
+        zowi.putMouth(matrixCode, false);
+        delay(500);
+
+        row = 0b00111110111110111110111110111110;
+        matrixCode = matrixCode << 1 & row;
+        zowi.putMouth(matrixCode, false);
+
+        arg = SCmd.next();
+    }
+    Serial.println(matrixCode, BIN);
+
+    sendFinalAck();
+}
 
 //-- Function to receive Servo commands
 void receiveServo(){

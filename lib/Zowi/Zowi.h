@@ -52,7 +52,7 @@ class Zowi
     void home();
     bool getRestState();
     void setRestState(bool state);
-    
+
     //-- Predetermined Motion Functions
     void jump(float steps=1, int T = 2000);
 
@@ -78,7 +78,7 @@ class Zowi
     //-- Battery
     double getBatteryLevel();
     double getBatteryVoltage();
-    
+
     //-- Mouth & Animations
     void putMouth(unsigned long int mouth, bool predefined = true);
     void putAnimationMouth(unsigned long int anim, int index);
@@ -92,9 +92,10 @@ class Zowi
     //-- Gestures
     void playGesture(int gesture);
 
- 
+    void sonar(int frecuency);
+
   private:
-    
+
     LedMatrix ledmatrix;
     BatReader battery;
     Oscillator servo[4];
@@ -106,7 +107,7 @@ class Zowi
 
     int pinBuzzer;
     int pinNoiseSensor;
-    
+
     unsigned long final_time;
     unsigned long partial_time;
     float increment[4];
@@ -120,5 +121,3 @@ class Zowi
 };
 
 #endif
-
-
