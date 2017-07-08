@@ -342,10 +342,9 @@ void Zowi::shakeLeg (int steps,int T,int dir){
 }
 
 void Zowi::musicRhythm (int T) {
+    Serial.print(T); Serial.println("musicRhythm");
     int footDown[4] = {90, 90, 90, 90};
     int footUp[4] = {90, 90, 90, 120};
-
-    putMouth(random(10, 21));
 
     _moveServos(T/2, footDown);
     _moveServos(T/2, footUp);

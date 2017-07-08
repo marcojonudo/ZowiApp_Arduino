@@ -58,8 +58,8 @@ class Zowi
 
     void walk(float steps=4, int T=1000, int dir = FORWARD);
     void turn(float steps=4, int T=2000, int dir = LEFT);
-    void bend (int steps=1, int T=1400, int dir=LEFT);
-    void shakeLeg (int steps=1, int T = 2000, int dir=RIGHT);
+    void bend(int steps=1, int T=1400, int dir=LEFT);
+    void shakeLeg(int steps=1, int T = 2000, int dir=RIGHT);
     void musicRhythm(int T);
 
     void updown(float steps=1, int T=1000, int h = 20);

@@ -564,12 +564,16 @@ void music() {
 
     Serial.println("Music!");
     androidApp.prepareMusic(zowi);
-    Serial.println("fasds");
 
     char *arg = SCmd.next();
+
+    Serial.print("arg: "); Serial.println(arg);
+    Serial.print("intArg: "); Serial.println(atoi(arg));
+
+    // androidApp.music(zowi, atoi(arg)*2000);
     int period;
     while (arg != NULL) {
-        period = atoi(arg) * 1000;
+        period = atoi(arg) * 2000;
         androidApp.music(zowi, period);
 
         arg = SCmd.next();

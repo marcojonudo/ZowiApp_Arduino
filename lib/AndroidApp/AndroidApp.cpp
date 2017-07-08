@@ -54,7 +54,7 @@ void AndroidApp::sonar(Zowi zowi, int sonarTone)
 
 void AndroidApp::prepareMusic(Zowi zowi) {
     int footUp[4] = {90, 90, 90, 120};
-    // zowi._moveServos(1000, footUp);
+    zowi._moveServos(1000, footUp);
 
     zowi.putMouth(five);
     delay(1000);
@@ -62,14 +62,15 @@ void AndroidApp::prepareMusic(Zowi zowi) {
     delay(1000);
     zowi.putMouth(three);
     delay(1000);
-    zowi.putMouth(two);
-    delay(1000);
-    zowi.putMouth(one);
-    delay(1000);
+    // zowi.putMouth(two);
+    // delay(1000);
+    // zowi.putMouth(one);
+    // delay(1000);
 }
 
 void AndroidApp::music(Zowi zowi, int T)
 {
+    Serial.println("muuuuusic");
     zowi.musicRhythm(T);
 }
 
