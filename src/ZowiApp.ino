@@ -487,13 +487,13 @@ void checkActivityMouth() {
 
     if (arg != NULL) {
         responseType = atoi(arg);
-        androidApp.checkActivity(zowi, responseType, false);
+        androidApp.checkActivityMouth(zowi, responseType);
     }
     else {
         zowi.putMouth(interrogation);
-        delay(2000);
-        zowi.clearMouth();
     }
+    delay(1500);
+    zowi.putMouth(happyOpen);
 
     sendFinalAck();
 }

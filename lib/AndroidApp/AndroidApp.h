@@ -17,7 +17,8 @@
 class AndroidApp
 {
   public:
-    void checkActivity(Zowi zowi, int response, bool checkType = true);
+    void checkActivity(Zowi zowi, int response);
+    void checkActivityMouth(Zowi zowi, int response);
     void sonar(Zowi zowi, int sonarTone);
     void prepareMusic(Zowi zowi);
     void music(Zowi zowi, int T);

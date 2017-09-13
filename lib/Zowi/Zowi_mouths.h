@@ -46,7 +46,7 @@
 
 #define angry_code                 0b00000000011110100001100001000000
 
-#define correct_code               0b00000000000001100010010100001000
+#define correct_code               0b00000000000001000010010100001000
 #define wrong_code                 0b00100010010100001000010100100010
 
 

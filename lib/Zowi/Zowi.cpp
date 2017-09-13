@@ -615,7 +615,7 @@ unsigned long int Zowi::getMouthShape(int number){
   unsigned long int types []={zero_code,one_code,two_code,three_code,four_code,five_code,six_code,seven_code,eight_code,
   nine_code,smile_code,happyOpen_code,happyClosed_code,heart_code,bigSurprise_code,smallSurprise_code,tongueOut_code,
   vamp1_code,vamp2_code,lineMouth_code,confused_code,diagonal_code,sad_code,sadOpen_code,sadClosed_code,
-  okMouth_code, xMouth_code,interrogation_code,thunder_code,culito_code,angry_code};
+  okMouth_code, xMouth_code,interrogation_code,thunder_code,culito_code,angry_code,correct_code,wrong_code};
 
   return types[number];
 }
