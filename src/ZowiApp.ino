@@ -154,11 +154,11 @@ void setup() {
     zowi.home();
 
     //Send Zowi name, programID & battery level.
-    requestName();
-    delay(50);
+    // requestName();
+    // delay(50);
     requestProgramId();
-    delay(50);
-    requestBattery();
+    // delay(50);
+    // requestBattery();
 
     //Checking battery
     ZowiLowBatteryAlarm();
@@ -189,14 +189,14 @@ void loop() {
     int elapsedTimeMillis = millis();
     int diff = elapsedTimeMillis - refTimeMilis;
     if (diff > 500) {
-        Serial.print("Loop period: "); Serial.println(diff);
+        // Serial.print("Loop period: "); Serial.println(diff);
         refTimeMilis = millis();
 
         switch (MODE) {
             //-- MODE 0 - Zowi is waiting for commands
             //---------------------------------------------------------
             case 0: {
-                Serial.println("CASE 0!");
+                // Serial.println("CASE 0!");
                 SCmd.readSerial();
 
                 //If Zowi is moving yet
@@ -208,12 +208,12 @@ void loop() {
             //-- MODE 1 - Check activity content using ultrasound sensor
             //---------------------------------------------------------
             case 1:
-                Serial.println("CASE 1!");
+                // Serial.println("CASE 1!");
 
                 distance = zowi.getDistance();
 
                 if (distance < 10) {
-                    Serial.print("Distance < 10");
+                    Serial.print(distance);
                     sendFinalAck();
                     MODE = 0;
                 }
@@ -469,10 +469,10 @@ void checkActivity() {
     else {
         zowi.putMouth(interrogation);
         delay(2000);
-        zowi.clearMouth();
+        zowi.putMouth(happyOpen);
     }
 
-    sendFinalAck();
+    /* Send final ACK is not necessary as Android app assumes correct reception */
 }
 
 void checkActivityMouth() {
@@ -492,10 +492,8 @@ void checkActivityMouth() {
     else {
         zowi.putMouth(interrogation);
     }
-    delay(1500);
+    delay(2000);
     zowi.putMouth(happyOpen);
-
-    sendFinalAck();
 }
 
 void checkActivityZowi() {
