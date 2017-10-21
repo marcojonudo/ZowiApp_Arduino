@@ -14,6 +14,7 @@
 //-- the last sample was taken
 void AndroidApp::checkActivity(Zowi zowi, int response)
 {
+    zowi.setRestState(false);
     switch (response) {
         /* Correct answer */
         case 1:
@@ -24,9 +25,11 @@ void AndroidApp::checkActivity(Zowi zowi, int response)
             zowi.playGesture(ZowiSad);
             break;
     }
+    zowi.home();
 }
 
 void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
+    zowi.setRestState(false);
     switch (response) {
         case 1:
             zowi.sing(S_happy_short);
@@ -37,6 +40,7 @@ void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
             zowi.putMouth(wrong);
             break;
     }
+    zowi.home();
 }
 
 //-- Attach an oscillator to a servo
@@ -57,28 +61,20 @@ void AndroidApp::sonar(Zowi zowi, int sonarTone)
     }
 }
 
-void AndroidApp::prepareMusic(Zowi zowi) {
-    int footUp[4] = {90, 90, 90, 120};
-    zowi._moveServos(1000, footUp);
-
-    zowi.putMouth(five);
-    delay(1000);
-    zowi.putMouth(four);
-    delay(1000);
-    zowi.putMouth(three);
-    delay(1000);
-    // zowi.putMouth(two);
-    // delay(1000);
-    // zowi.putMouth(one);
-    // delay(1000);
-}
-
-void AndroidApp::music(Zowi zowi, int T)
+void AndroidApp::music(Zowi zowi, int T, bool firstTime)
 {
-    Serial.println("muuuuusic");
-    zowi.musicRhythm(T);
+    zowi.setRestState(false);
+    Serial.print("Rest: "); Serial.println(zowi.getRestState());
+    zowi.musicRhythm(T, firstTime);
+    zowi.home();
 }
 
+void AndroidApp::turn(Zowi zowi, int direction)
+{
+    zowi.setRestState(false);
+    zowi.turnInPlace(direction);
+    zowi.home();
+}
 /*************************************/
 /* Set the oscillator period, in ms  */
 /*************************************/

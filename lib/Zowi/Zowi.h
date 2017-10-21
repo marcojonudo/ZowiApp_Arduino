@@ -60,7 +60,7 @@ class Zowi
     void turn(float steps=4, int T=2000, int dir = LEFT);
     void bend(int steps=1, int T=1400, int dir=LEFT);
     void shakeLeg(int steps=1, int T = 2000, int dir=RIGHT);
-    void musicRhythm(int T);
+    void musicRhythm(int T, bool firstTime);
 
     void updown(float steps=1, int T=1000, int h = 20);
     void swing(float steps=1, int T=1000, int h=20);
@@ -94,6 +94,7 @@ class Zowi
     void playGesture(int gesture);
 
     void sonar(int frecuency);
+    void turnInPlace(int direction);
 
   private:
 

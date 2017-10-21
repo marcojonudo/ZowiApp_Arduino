@@ -20,8 +20,8 @@ class AndroidApp
     void checkActivity(Zowi zowi, int response);
     void checkActivityMouth(Zowi zowi, int response);
     void sonar(Zowi zowi, int sonarTone);
-    void prepareMusic(Zowi zowi);
-    void music(Zowi zowi, int T);
+    void music(Zowi zowi, int T, bool firstTime);
+    void turn(Zowi zowi, int direction);
     void grid();
 
   private:

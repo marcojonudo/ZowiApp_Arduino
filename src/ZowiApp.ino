@@ -145,6 +145,8 @@ void setup() {
     SCmd.addCommand("S", sonar);
     SCmd.addCommand("O", operations);
     SCmd.addCommand("M", music);
+    SCmd.addCommand("T", turn);
+    SCmd.addCommand("W", walkForward);
     // SCmd.addCommand("O2", androidApp.operations);
     // SCmd.addCommand("G", androidApp.grid);
     SCmd.addDefaultHandler(receiveStop);
@@ -560,33 +562,48 @@ void music() {
     sendAck();
     zowi.home();
 
-    Serial.println("Music!");
-    androidApp.prepareMusic(zowi);
-
     char *arg = SCmd.next();
 
-    Serial.print("arg: "); Serial.println(arg);
-    Serial.print("intArg: "); Serial.println(atoi(arg));
-
-    // androidApp.music(zowi, atoi(arg)*2000);
     int period;
+    bool firstTime = true;
     while (arg != NULL) {
-        period = atoi(arg) * 2000;
-        androidApp.music(zowi, period);
+        period = atof(arg) * 2000;
+        androidApp.music(zowi, period, firstTime);
+
+        if (firstTime)
+            firstTime = false;
 
         arg = SCmd.next();
     }
 
+    zowi.putMouth(happyOpen);
     MODE = 0;
+}
 
-    sendFinalAck();
+void turn() {
+    sendAck();
+    zowi.home();
+
+    char *arg = SCmd.next();
+
+    if (arg != NULL) {
+        int direction = atoi(arg);
+        androidApp.turn(zowi, direction);
+    }
+
+    zowi.home();
+    zowi.putMouth(happyOpen);
+
+    MODE = 0;
+}
+
+void walkForward() {
+    zowi.walk(3);
 }
 
 void guideZowi() {
     sendAck();
     zowi.home();
-
-    Serial.println("guideZowi");
 
     MODE = 2;
 }

@@ -59,6 +59,8 @@ void Zowi::detachServos(){
     servo[1].detach();
     servo[2].detach();
     servo[3].detach();
+    Serial.println("Servos detached");
+    putMouth(smallSurprise);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -149,6 +151,7 @@ void Zowi::_execute(int A[4], int O[4], int T, double phase_diff[4], float steps
 //-- HOME = Zowi at rest position -------------------------------//
 ///////////////////////////////////////////////////////////////////
 void Zowi::home(){
+    Serial.print("a: "); Serial.println(isZowiResting);
 
   if(isZowiResting==false){ //Go to rest position only if necessary
 
@@ -341,13 +344,96 @@ void Zowi::shakeLeg (int steps,int T,int dir){
   delay(T);
 }
 
-void Zowi::musicRhythm (int T) {
-    Serial.print(T); Serial.println("musicRhythm");
-    int footDown[4] = {90, 90, 90, 90};
-    int footUp[4] = {90, 90, 90, 120};
+void Zowi::musicRhythm (int T, bool firstTime) {
+    int home[4] = {90, 90, 90, 90};
+    int lift[4] = {100, 80, 115, 65};
 
-    _moveServos(T/2, footDown);
-    _moveServos(T/2, footUp);
+    if (firstTime) {
+        putMouth(five);
+        _tone(200, 30, 1);
+        delay(1000);
+        putMouth(four);
+        _tone(400, 30, 1);
+        delay(1000);
+        putMouth(three);
+        _tone(600, 30, 1);
+        delay(1000);
+        putMouth(two);
+        _tone(800, 30, 1);
+        delay(1000);
+        putMouth(one);
+        _tone(1000, 30, 1);
+        delay(1000);
+        putMouth(happyOpen);
+    }
+
+    if (T > 0) {
+        _moveServos(T/2, lift);
+        _moveServos(T/2, home);
+    }
+}
+
+void Zowi::turnInPlace(int direction) {
+    int lift1[4]={90, 90, 58, 35};
+    int turn1[4]={120, 90, 90, 90};
+    int lift2[4]={90, 90, 145, 122};
+    int turn2[4]={90, 120, 90, 90};
+    int turn3[4]={90, 90, 90, 90};
+
+    if (direction == 2) {
+        lift1[2] = 180 - 35;
+        lift1[3] = 185 - 58;
+        turn1[0] = 180 - 90;
+        turn1[1] = 180 - 120;
+        lift2[2] = 180 - 122;
+        lift2[3] = 180 - 145;
+        turn2[0] = 180 - 120;
+        turn2[1] = 180 - 90;
+    }
+
+
+    //Changes in the parameters if left leg is chosen
+  //   if(dir==-1)
+  //   {
+  //     shake_leg1[2]=180-35;
+  //     shake_leg1[3]=180-58;
+  //     shake_leg2[2]=180-120;
+  //     shake_leg2[3]=180-58;
+  //     shake_leg3[2]=180-60;
+  //     shake_leg3[3]=180-58;
+  //   }
+  //
+  //   //Time of the bend movement. Fixed parameter to avoid falls
+  //   int T2=1000;
+  //   //Time of one shake, constrained in order to avoid movements too fast.
+  //   T=T-T2;
+    // T=max(T,200*numberLegMoves);
+
+    int T = 700;
+    // for (int j=0; j<steps;j++)
+    // {
+    //Bend movement
+    _moveServos(T, lift1);
+    _moveServos(T, turn1);
+    _moveServos(T, lift2);
+    _moveServos(T, turn2);
+    _moveServos(T, lift1);
+    _moveServos(T, turn1);
+    _moveServos(T, lift2);
+    _moveServos(T, turn3);
+    // _moveServos(T2/2,shake_leg2);
+
+      //Shake movement
+    //   for (int i=0;i<numberLegMoves;i++)
+    //   {
+    //   _moveServos(T/(2*numberLegMoves),shake_leg3);
+    //   _moveServos(T/(2*numberLegMoves),shake_leg2);
+    //   }
+    //   _moveServos(500,homes); //Return to home position
+    // }
+  //
+  //   delay(T);
+  // }
 }
 
 
