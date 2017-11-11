@@ -34,10 +34,12 @@ void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
         case 1:
             zowi.sing(S_happy_short);
             zowi.putMouth(correct);
+            delay(1000);
             break;
         case 2:
             zowi.sing(S_confused);
             zowi.putMouth(wrong);
+            delay(1000);
             break;
     }
     zowi.home();
@@ -64,7 +66,6 @@ void AndroidApp::sonar(Zowi zowi, int sonarTone)
 void AndroidApp::music(Zowi zowi, int T, bool firstTime)
 {
     zowi.setRestState(false);
-    Serial.print("Rest: "); Serial.println(zowi.getRestState());
     zowi.musicRhythm(T, firstTime);
     zowi.home();
 }

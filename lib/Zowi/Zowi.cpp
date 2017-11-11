@@ -13,7 +13,7 @@
 
 
 
-void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int NoiseSensor, int Buzzer, int USTrigger, int USEcho) {
+void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int NoiseSensor, int Buzzer, int USTrigger, int USEcho, int ledAnalogPin) {
 
   servo_pins[0] = YL;
   servo_pins[1] = YR;
@@ -39,9 +39,13 @@ void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int Noise
   //Buzzer & noise sensor pins:
   pinBuzzer = Buzzer;
   pinNoiseSensor = NoiseSensor;
+  ledPin = ledAnalogPin;
 
   pinMode(Buzzer,OUTPUT);
   pinMode(NoiseSensor,INPUT);
+  pinMode(ledAnalogPin,OUTPUT);
+
+  analogWrite(ledPin, 0);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -151,8 +155,6 @@ void Zowi::_execute(int A[4], int O[4], int T, double phase_diff[4], float steps
 //-- HOME = Zowi at rest position -------------------------------//
 ///////////////////////////////////////////////////////////////////
 void Zowi::home(){
-    Serial.print("a: "); Serial.println(isZowiResting);
-
   if(isZowiResting==false){ //Go to rest position only if necessary
 
     int homes[4]={90, 90, 90, 90}; //All the servos at rest position
@@ -981,17 +983,23 @@ void Zowi::playGesture(int gesture){
 
 
     case ZowiSuperHappy:
+        analogWrite(ledPin, 255);
         putMouth(happyOpen);
         sing(S_happy);
+        analogWrite(ledPin, 0);
         putMouth(happyClosed);
         tiptoeSwing(1,500,20);
+        analogWrite(ledPin, 255);
         putMouth(happyOpen);
         sing(S_superHappy);
+        analogWrite(ledPin, 0);
         putMouth(happyClosed);
         tiptoeSwing(1,500,20);
+        analogWrite(ledPin, 255);
 
         home();
         putMouth(happyOpen);
+        analogWrite(ledPin, 0);
     break;
 
 

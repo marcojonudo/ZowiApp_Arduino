@@ -102,6 +102,8 @@ bool connectedToApp = false;
 int distance;
 bool waitForCommands = false;
 
+unsigned long matrixCode = 0;
+
 ///////////////////////////////////////////////////////////////////
 //-- Setup ------------------------------------------------------//
 ///////////////////////////////////////////////////////////////////
@@ -178,20 +180,9 @@ void setup() {
 //-- Principal Loop ---------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 void loop() {
-    // if (Serial.available() > 0 && MODE != 4) {
-    //     MODE=4;
-    //     zowi.putMouth(tongueOut);
-    //     delay(1000);
-    //     //Disable Pin Interruptions
-    //     disableInterrupt(PIN_SecondButton);
-    //     disableInterrupt(PIN_ThirdButton);
-    //
-    //     buttonPushed = false;
-    // }
     int elapsedTimeMillis = millis();
     int diff = elapsedTimeMillis - refTimeMilis;
     if (diff > 500) {
-        // Serial.print("Loop period: "); Serial.println(diff);
         refTimeMilis = millis();
 
         switch (MODE) {
@@ -234,6 +225,8 @@ void loop() {
                         zowi.walk(1, 1000);
                     else if (distance > 20 && distance < 30)
                         zowi.walk(1, 800);
+                    else
+                        zowi.home();
                 }
                 else {
                     zowi.playGesture(ZowiSuperHappy);
@@ -244,38 +237,6 @@ void loop() {
             //-- MODE 3 - Noise detector mode
             //---------------------------------------------------------
             case 3: {
-                // if (matrixStep < NUMBER_OF_COLUMNS) {
-                //     unsigned long row;
-                //     char arg[NUMBER_OF_ROWS+1];
-                //
-                //     for (int i=0; i<NUMBER_OF_ROWS; i++) {
-                //         columnsArray[i].toCharArray(arg, NUMBER_OF_ROWS+1);
-                //         // Serial.print("columnsArray: "); Serial.println(arg);
-                //         row = arg - '0';
-                //         Serial.print("arg: "); Serial.println(arg);
-                //         Serial.print("row: "); Serial.println(row, BIN);
-                //         matrixCode = matrixCode | row << bitShift;
-                //         bitShift = bitShift - 6;
-                //     }
-                //     delay(3000);
-                //     Serial.print("code: "); Serial.println(matrixCode, BIN);
-                //     zowi.putMouth(matrixCode, false);
-                //     delay(500);
-                //
-                //     row = 0b00111110111110111110111110111110;
-                //     matrixCode = matrixCode << 1 & row;
-                //     zowi.putMouth(matrixCode, false);
-                // }
-                // else {
-                //     matrixStep = 0;
-                //     MODE = 0;
-                // }
-                //
-                // matrixStep++;
-                // bitShift = 24;
-                // Serial.println(matrixCode, BIN);
-                //
-                // sendFinalAck();
                 break;
             }
             //-- MODE 4 - ZowiPAD or any Teleoperation mode (listening SerialPort)
@@ -309,19 +270,12 @@ void loop() {
 
 //-- Function executed when A button is pushed
 void aButtonPushed() {
-
     buttonAPushed=true;
-
-    // if (!buttonPushed) {
-    //     buttonPushed = true;
-    //     zowi.putMouth(smallSurprise);
-    // }
 }
 
 
 //-- Function to read distance sensor & to actualize obstacleDetected variable
 void obstacleDetector(){
-
    int distance = zowi.getDistance();
 
         if(distance<15){
@@ -531,14 +485,15 @@ void sonar() {
 }
 
 void operations() {
-    sendAck();
     zowi.home();
 
     char *arg = SCmd.next();
 
+    zowi.clearMouth();
+    unsigned long row;
+    int bitshift;
     while (arg != NULL) {
-        int bitshift = 24;
-        unsigned long row, matrixCode;
+        bitshift = 24;
         for (int i=0; i<5; i++) {
             row = arg[i] - '0';
             matrixCode = matrixCode | row << bitshift;
@@ -554,8 +509,7 @@ void operations() {
     }
 
     MODE = 0;
-
-    sendFinalAck();
+    zowi.putMouth(happyOpen);
 }
 
 void music() {

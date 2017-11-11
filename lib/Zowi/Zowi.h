@@ -27,6 +27,7 @@
 #define PIN_Trigger 8
 #define PIN_Echo    9
 #define PIN_NoiseSensor A6
+#define PIN_LED A4
 
 
 class Zowi
@@ -34,7 +35,7 @@ class Zowi
   public:
 
     //-- Zowi initialization
-    void init(int YL, int YR, int RL, int RR, bool load_calibration=true, int NoiseSensor=PIN_NoiseSensor, int Buzzer=PIN_Buzzer, int USTrigger=PIN_Trigger, int USEcho=PIN_Echo);
+    void init(int YL, int YR, int RL, int RR, bool load_calibration=true, int NoiseSensor=PIN_NoiseSensor, int Buzzer=PIN_Buzzer, int USTrigger=PIN_Trigger, int USEcho=PIN_Echo, int ledPin = PIN_LED);
 
     //-- Attach & detach functions
     void attachServos();
@@ -109,6 +110,7 @@ class Zowi
 
     int pinBuzzer;
     int pinNoiseSensor;
+    int ledPin;
 
     unsigned long final_time;
     unsigned long partial_time;
