@@ -22,7 +22,7 @@ class AndroidApp
     void sonar(Zowi zowi, int sonarTone);
     void music(Zowi zowi, int T, bool firstTime);
     void turn(Zowi zowi, int direction);
-    void grid();
+    void grid(Zowi zowi, int direction);
 
   private:
 

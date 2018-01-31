@@ -9,9 +9,7 @@
 #include "AndroidApp.h"
 #include <Zowi.h>
 
-//-- This function returns true if another sample
-//-- should be taken (i.e. the TS time has passed since
-//-- the last sample was taken
+//-- Function to react to an activity check using predefined gestures
 void AndroidApp::checkActivity(Zowi zowi, int response)
 {
     zowi.setRestState(false);
@@ -21,13 +19,14 @@ void AndroidApp::checkActivity(Zowi zowi, int response)
             zowi.playGesture(ZowiSuperHappy);
             break;
         /* Wrong answer */
-        case 2:
+        case 0:
             zowi.playGesture(ZowiSad);
             break;
     }
     zowi.home();
 }
 
+//-- Function to react to an activity check using mouth shapes and sounds
 void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
     zowi.setRestState(false);
     switch (response) {
@@ -36,7 +35,7 @@ void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
             zowi.putMouth(correct);
             delay(1000);
             break;
-        case 2:
+        case 0:
             zowi.sing(S_confused);
             zowi.putMouth(wrong);
             delay(1000);
@@ -45,9 +44,8 @@ void AndroidApp::checkActivityMouth(Zowi zowi, int response) {
     zowi.home();
 }
 
-//-- Attach an oscillator to a servo
-//-- Input: pin is the arduino pin were the servo
-//-- is connected
+//-- Makes Zowi act as a sonar, emitting bips with a
+//-- variable frecuency
 void AndroidApp::sonar(Zowi zowi, int sonarTone)
 {
     switch (sonarTone) {
@@ -63,6 +61,7 @@ void AndroidApp::sonar(Zowi zowi, int sonarTone)
     }
 }
 
+//-- Counts from 5 to 0 to prepare for rhytm movements
 void AndroidApp::music(Zowi zowi, int T, bool firstTime)
 {
     zowi.setRestState(false);
@@ -70,16 +69,22 @@ void AndroidApp::music(Zowi zowi, int T, bool firstTime)
     zowi.home();
 }
 
+//-- Zowi turns 90º left or reight depending on the received parameter
 void AndroidApp::turn(Zowi zowi, int direction)
 {
     zowi.setRestState(false);
     zowi.turnInPlace(direction);
     zowi.home();
 }
-/*************************************/
-/* Set the oscillator period, in ms  */
-/*************************************/
-void AndroidApp::grid()
-{
 
+//-- Walks straight forwared or turn depending on the parameter
+void AndroidApp::grid(Zowi zowi, int direction) {
+    switch (direction) {
+        case 0:
+            zowi.walk(3);
+            break;
+        default:
+            zowi.turnInPlace(direction);
+            break;
+    }
 };

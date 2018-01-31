@@ -13,7 +13,7 @@
 
 
 
-void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int NoiseSensor, int Buzzer, int USTrigger, int USEcho, int ledAnalogPin) {
+void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int NoiseSensor, int Buzzer, int USTrigger, int USEcho, int leftLedAnalogPin, int rightLedAnalogPin) {
 
   servo_pins[0] = YL;
   servo_pins[1] = YR;
@@ -39,13 +39,15 @@ void Zowi::init(int YL, int YR, int RL, int RR, bool load_calibration, int Noise
   //Buzzer & noise sensor pins:
   pinBuzzer = Buzzer;
   pinNoiseSensor = NoiseSensor;
-  ledPin = ledAnalogPin;
+  leftLedPin = leftLedAnalogPin;
+  rightLedPin = rightLedAnalogPin;
 
   pinMode(Buzzer,OUTPUT);
   pinMode(NoiseSensor,INPUT);
-  pinMode(ledAnalogPin,OUTPUT);
+  pinMode(leftLedAnalogPin,OUTPUT);
+  pinMode(rightLedAnalogPin,OUTPUT);
 
-  analogWrite(ledPin, 0);
+  analogWrite(rightLedPin, 0);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -382,7 +384,7 @@ void Zowi::turnInPlace(int direction) {
     int turn2[4]={90, 120, 90, 90};
     int turn3[4]={90, 90, 90, 90};
 
-    if (direction == 2) {
+    if (direction == 0) {
         lift1[2] = 180 - 35;
         lift1[3] = 185 - 58;
         turn1[0] = 180 - 90;
@@ -393,27 +395,7 @@ void Zowi::turnInPlace(int direction) {
         turn2[1] = 180 - 90;
     }
 
-
-    //Changes in the parameters if left leg is chosen
-  //   if(dir==-1)
-  //   {
-  //     shake_leg1[2]=180-35;
-  //     shake_leg1[3]=180-58;
-  //     shake_leg2[2]=180-120;
-  //     shake_leg2[3]=180-58;
-  //     shake_leg3[2]=180-60;
-  //     shake_leg3[3]=180-58;
-  //   }
-  //
-  //   //Time of the bend movement. Fixed parameter to avoid falls
-  //   int T2=1000;
-  //   //Time of one shake, constrained in order to avoid movements too fast.
-  //   T=T-T2;
-    // T=max(T,200*numberLegMoves);
-
     int T = 700;
-    // for (int j=0; j<steps;j++)
-    // {
     //Bend movement
     _moveServos(T, lift1);
     _moveServos(T, turn1);
@@ -423,19 +405,6 @@ void Zowi::turnInPlace(int direction) {
     _moveServos(T, turn1);
     _moveServos(T, lift2);
     _moveServos(T, turn3);
-    // _moveServos(T2/2,shake_leg2);
-
-      //Shake movement
-    //   for (int i=0;i<numberLegMoves;i++)
-    //   {
-    //   _moveServos(T/(2*numberLegMoves),shake_leg3);
-    //   _moveServos(T/(2*numberLegMoves),shake_leg2);
-    //   }
-    //   _moveServos(500,homes); //Return to home position
-    // }
-  //
-  //   delay(T);
-  // }
 }
 
 
@@ -983,38 +952,56 @@ void Zowi::playGesture(int gesture){
 
 
     case ZowiSuperHappy:
-        analogWrite(ledPin, 255);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 255);
         putMouth(happyOpen);
         sing(S_happy);
-        analogWrite(ledPin, 0);
+        analogWrite(rightLedPin, 255);
+        analogWrite(leftLedPin, 0);
         putMouth(happyClosed);
         tiptoeSwing(1,500,20);
-        analogWrite(ledPin, 255);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 255);
         putMouth(happyOpen);
         sing(S_superHappy);
-        analogWrite(ledPin, 0);
+        analogWrite(rightLedPin, 255);
+        analogWrite(leftLedPin, 0);
         putMouth(happyClosed);
         tiptoeSwing(1,500,20);
-        analogWrite(ledPin, 255);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 255);
 
         home();
         putMouth(happyOpen);
-        analogWrite(ledPin, 0);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 0);
     break;
 
 
     case ZowiSad:
         putMouth(sad);
         _moveServos(700, sadPos);
+        analogWrite(rightLedPin, 255);
+        analogWrite(leftLedPin, 255);
         bendTones(880, 830, 1.02, 20, 200);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 0);
         putMouth(sadClosed);
         bendTones(830, 790, 1.02, 20, 200);
+        analogWrite(rightLedPin, 255);
+        analogWrite(leftLedPin, 255);
         putMouth(sadOpen);
         bendTones(790, 740, 1.02, 20, 200);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 0);
         putMouth(sadClosed);
         bendTones(740, 700, 1.02, 20, 200);
+        analogWrite(rightLedPin, 255);
+        analogWrite(leftLedPin, 255);
         putMouth(sad);
         delay(500);
+        analogWrite(rightLedPin, 0);
+        analogWrite(leftLedPin, 0);
 
         home();
         delay(300);
