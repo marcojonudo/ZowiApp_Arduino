@@ -88,6 +88,8 @@ volatile bool buttonAPushed=false; //Variable to remember when A button has been
 volatile bool buttonBPushed=false; //Variable to remember when B button has been pushed
 
 unsigned long refTimeMilis = 0;
+unsigned long absoluteRefTimeMilis = 0;
+unsigned long mouthTimeMillis = 0;
 
 int randomDance=0;
 int randomSteps=0;
@@ -95,12 +97,20 @@ int randomSteps=0;
 bool obstacleDetected = false;
 bool connectedToApp = false;
 
+bool stopMouths = false;
+
 #define NUMBER_OF_COLUMNS 5
 #define NUMBER_OF_ROWS 5
 #define REMOVE_RIGHT_BITS 0b00111110111110111110111110111110
 
 int distance;
 bool waitForCommands = false;
+bool displayMouths = false;
+bool asamblea = false;
+int frecuencies[4] = {500, 700, 900, 800};
+int mouths[4] = {20, 10, 11, 13};
+int counter = 0;
+int totalMouths[23] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
 
 unsigned long matrixCode = 0;
 
@@ -123,6 +133,7 @@ void setup() {
 
     //Interrumptions
     enableInterrupt(PIN_SecondButton, aButtonPushed, RISING);
+    enableInterrupt(PIN_ThirdButton, bButtonPushed, RISING);
     // enableInterrupt(PIN_ThirdButton, thirdButtonPushed, RISING);
 
     // Setup callbacks for SerialCommand commands
@@ -135,6 +146,7 @@ void setup() {
     SCmd.addCommand("M", music);
     SCmd.addCommand("T", turn);
     SCmd.addCommand("W", walkForward);
+    SCmd.addCommand("B", walkBackward);
     SCmd.addCommand("R", grid);
     // SCmd.addCommand("O2", androidApp.operations);
     // SCmd.addCommand("G", androidApp.grid);
@@ -158,7 +170,8 @@ void setup() {
         zowi.putMouth(happyOpen);
     }
 
-    refTimeMilis = millis();
+    refTimeMilis = millis;
+    absoluteRefTimeMilis = millis();
 }
 
 
@@ -167,16 +180,41 @@ void setup() {
 //-- Principal Loop ---------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 void loop() {
-    int elapsedTimeMillis = millis();
+    unsigned long elapsedTimeMillis = millis();
     int diff = elapsedTimeMillis - refTimeMilis;
+    //if (elapsedTimeMillis - absoluteRefTimeMilis > 1800000 && !stopMouths) {
     if (diff > 500) {
+        if (elapsedTimeMillis - absoluteRefTimeMilis > 5000 && !stopMouths) {
+            if (buttonBPushed) {
+                stopMouths = true;
+                zowi.putMouth(happyOpen);
+                zowi.sing(S_happy_short);
+            } else if (zowi.getNoise() >= 650 || displayMouths == true) {
+                //Serial.println(elapsedTimeMillis - mouthTimeMillis);
+                if (elapsedTimeMillis - mouthTimeMillis > 1000) {
+                    int randomMouth = random(10, 24);
+                    //int randomSong = random(18);
+                    zowi.putMouth(randomMouth);
+                    //zowi.sing(randomSong);
+                    displayMouths = true;
+                    mouthTimeMillis = millis();
+                }
+            }
+        }
+        if (buttonAPushed) {
+            zowi._tone(frecuencies[counter%4], 500, 0);
+            zowi.putMouth(mouths[counter%4]);
+            counter = counter + 1;
+            asamblea = true;
+            // Hablar con Alba para ver cómo acabar el sonido
+        }
         refTimeMilis = millis();
 
         switch (MODE) {
             //-- MODE 0 - Zowi is waiting for commands
             //---------------------------------------------------------
             case 0: {
-                // Serial.println("CASE 0!");
+                Serial.println("CASE 0!");
                 SCmd.readSerial();
 
                 //If Zowi is moving yet
@@ -193,7 +231,6 @@ void loop() {
                 distance = zowi.getDistance();
 
                 if (distance < 10) {
-                    Serial.print(distance);
                     sendFinalAck();
                     MODE = 0;
                 }
@@ -244,7 +281,14 @@ void loop() {
 
 //-- Function executed when A button is pushed
 void aButtonPushed() {
-    buttonAPushed=true;
+    buttonAPushed=!buttonAPushed;
+    if (!buttonAPushed) {
+        zowi.putMouth(happyClosed);
+    }
+}
+
+void bButtonPushed() {
+    buttonBPushed = true;
 }
 
 
@@ -404,6 +448,10 @@ void turn() {
 
 void walkForward() {
     zowi.walk(3);
+}
+
+void walkBackward() {
+    zowi.walk(3, 1000, -1);
 }
 
 void grid() {
