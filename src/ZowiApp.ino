@@ -97,7 +97,8 @@ int randomSteps=0;
 bool obstacleDetected = false;
 bool connectedToApp = false;
 
-bool stopMouths = false;
+bool showMouths = true;
+bool assembly = false;
 
 #define NUMBER_OF_COLUMNS 5
 #define NUMBER_OF_ROWS 5
@@ -113,6 +114,8 @@ int counter = 0;
 int totalMouths[23] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
 
 unsigned long matrixCode = 0;
+
+bool connectWithAppMode = false;
 
 ///////////////////////////////////////////////////////////////////
 //-- Setup ------------------------------------------------------//
@@ -184,30 +187,39 @@ void loop() {
     int diff = elapsedTimeMillis - refTimeMilis;
     //if (elapsedTimeMillis - absoluteRefTimeMilis > 1800000 && !stopMouths) {
     if (diff > 500) {
-        if (elapsedTimeMillis - absoluteRefTimeMilis > 5000 && !stopMouths) {
-            if (buttonBPushed) {
-                stopMouths = true;
-                zowi.putMouth(happyOpen);
-                zowi.sing(S_happy_short);
-            } else if (zowi.getNoise() >= 650 || displayMouths == true) {
-                //Serial.println(elapsedTimeMillis - mouthTimeMillis);
-                if (elapsedTimeMillis - mouthTimeMillis > 1000) {
-                    int randomMouth = random(10, 24);
-                    //int randomSong = random(18);
-                    zowi.putMouth(randomMouth);
-                    //zowi.sing(randomSong);
-                    displayMouths = true;
-                    mouthTimeMillis = millis();
-                }
-            }
+        if (buttonAPushed && buttonBPushed) {
+            connectWithAppMode = !connectWithAppMode;
+            buttonAPushed = false;
+            buttonBPushed = false;
+            Serial.println("Amboooos");
+            zowi.putMouth(happyOpen);
         }
-        if (buttonAPushed) {
-            zowi._tone(frecuencies[counter%4], 500, 0);
-            zowi.putMouth(mouths[counter%4]);
-            counter = counter + 1;
-            asamblea = true;
-            // Hablar con Alba para ver cómo acabar el sonido
-        }
+        // if (buttonAPushed) {
+        //     Serial.println("buttonAPushed");
+        //     showMouths = false;
+        //     assembly = !assembly;
+        //     buttonAPushed = false;
+        //     zowi.putMouth(happyOpen);
+        // } else if (buttonBPushed) {
+        //     Serial.println("buttonBPushed");
+        //     assembly = false;
+        //     showMouths = !showMouths;
+        //     buttonBPushed = false;
+        //     zowi.putMouth(happyOpen);
+        // }
+        //
+        // if (elapsedTimeMillis - mouthTimeMillis > 1000 && showMouths) {
+        //     Serial.println("showMouths");
+        //     int randomMouth = random(10, 24);
+        //     zowi.putMouth(randomMouth);
+        //     mouthTimeMillis = millis();
+        // } else if (assembly) {
+        //     Serial.println("assembly");
+        //     zowi._tone(frecuencies[counter%4], 500, 0);
+        //     zowi.putMouth(mouths[counter%4]);
+        //     counter = counter + 1;
+        // }
+        //
         refTimeMilis = millis();
 
         switch (MODE) {
@@ -215,7 +227,11 @@ void loop() {
             //---------------------------------------------------------
             case 0: {
                 Serial.println("CASE 0!");
-                SCmd.readSerial();
+                if (connectWithAppMode) {
+                    SCmd.readSerial();
+                } else {
+                    executeVoidConnectedMode(elapsedTimeMillis);
+                }
 
                 //If Zowi is moving yet
                 if (zowi.getRestState() == false){
@@ -279,6 +295,36 @@ void loop() {
 //-- Functions --------------------------------------------------//
 ///////////////////////////////////////////////////////////////////
 
+void executeVoidConnectedMode(long elapsedTimeMillis) {
+    if (buttonAPushed) {
+        Serial.println("buttonAPushed");
+        showMouths = false;
+        assembly = !assembly;
+        buttonAPushed = false;
+        zowi.putMouth(happyOpen);
+    } else if (buttonBPushed) {
+        Serial.println("buttonBPushed");
+        assembly = false;
+        showMouths = !showMouths;
+        buttonBPushed = false;
+        zowi.putMouth(happyOpen);
+    }
+
+    if (elapsedTimeMillis - mouthTimeMillis > 1000 && showMouths) {
+        Serial.println("showMouths");
+        int randomMouth = random(10, 24);
+        zowi.putMouth(randomMouth);
+        mouthTimeMillis = millis();
+    } else if (assembly) {
+        Serial.println("assembly");
+        zowi._tone(frecuencies[counter%4], 500, 0);
+        zowi.putMouth(mouths[counter%4]);
+        counter = counter + 1;
+    }
+
+    //refTimeMilis = millis();
+}
+
 //-- Function executed when A button is pushed
 void aButtonPushed() {
     buttonAPushed=!buttonAPushed;
@@ -288,7 +334,7 @@ void aButtonPushed() {
 }
 
 void bButtonPushed() {
-    buttonBPushed = true;
+    buttonBPushed = !buttonBPushed;
 }
 
 
