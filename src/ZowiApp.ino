@@ -97,7 +97,7 @@ int randomSteps=0;
 bool obstacleDetected = false;
 bool connectedToApp = false;
 
-bool showMouths = true;
+bool showMouths = false;
 bool assembly = false;
 
 #define NUMBER_OF_COLUMNS 5
@@ -114,8 +114,6 @@ int counter = 0;
 int totalMouths[23] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
 
 unsigned long matrixCode = 0;
-
-bool connectWithAppMode = false;
 
 ///////////////////////////////////////////////////////////////////
 //-- Setup ------------------------------------------------------//
@@ -173,7 +171,7 @@ void setup() {
         zowi.putMouth(happyOpen);
     }
 
-    refTimeMilis = millis;
+    refTimeMilis = millis();
     absoluteRefTimeMilis = millis();
 }
 
@@ -185,15 +183,7 @@ void setup() {
 void loop() {
     unsigned long elapsedTimeMillis = millis();
     int diff = elapsedTimeMillis - refTimeMilis;
-    //if (elapsedTimeMillis - absoluteRefTimeMilis > 1800000 && !stopMouths) {
     if (diff > 500) {
-        if (buttonAPushed && buttonBPushed) {
-            connectWithAppMode = !connectWithAppMode;
-            buttonAPushed = false;
-            buttonBPushed = false;
-            Serial.println("Amboooos");
-            zowi.putMouth(happyOpen);
-        }
         // if (buttonAPushed) {
         //     Serial.println("buttonAPushed");
         //     showMouths = false;
@@ -219,24 +209,14 @@ void loop() {
         //     zowi.putMouth(mouths[counter%4]);
         //     counter = counter + 1;
         // }
-        //
+
         refTimeMilis = millis();
 
         switch (MODE) {
             //-- MODE 0 - Zowi is waiting for commands
             //---------------------------------------------------------
             case 0: {
-                Serial.println("CASE 0!");
-                if (connectWithAppMode) {
-                    SCmd.readSerial();
-                } else {
-                    executeVoidConnectedMode(elapsedTimeMillis);
-                }
-
-                //If Zowi is moving yet
-                if (zowi.getRestState() == false){
-                    zowi.home();
-                }
+                SCmd.readSerial();
                 break;
             }
             //-- MODE 1 - Check activity content using ultrasound sensor
@@ -251,40 +231,7 @@ void loop() {
                     MODE = 0;
                 }
                 break;
-            //-- MODE 2 - Guide Zowi with the hand
-            //---------------------------------------------------------
-            case 2:
-                Serial.println("CASE 2!");
-
-                if (!buttonAPushed) {
-                    distance = zowi.getDistance();
-
-                    if (distance < 10)
-                        zowi.walk(1, 1200);
-                    else if (distance > 10 && distance < 20)
-                        zowi.walk(1, 1000);
-                    else if (distance > 20 && distance < 30)
-                        zowi.walk(1, 800);
-                    else
-                        zowi.home();
-                }
-                else {
-                    zowi.playGesture(ZowiSuperHappy);
-                    MODE = 0;
-                }
-
-                break;
-            //-- MODE 3 - Noise detector mode
-            //---------------------------------------------------------
-            case 3: {
-                break;
-            }
-            //-- MODE 4 - ZowiPAD or any Teleoperation mode (listening SerialPort)
-            //---------------------------------------------------------
-            case 4:
-                break;
             default:
-                MODE=4;
                 break;
         }
     }
@@ -294,36 +241,6 @@ void loop() {
 ///////////////////////////////////////////////////////////////////
 //-- Functions --------------------------------------------------//
 ///////////////////////////////////////////////////////////////////
-
-void executeVoidConnectedMode(long elapsedTimeMillis) {
-    if (buttonAPushed) {
-        Serial.println("buttonAPushed");
-        showMouths = false;
-        assembly = !assembly;
-        buttonAPushed = false;
-        zowi.putMouth(happyOpen);
-    } else if (buttonBPushed) {
-        Serial.println("buttonBPushed");
-        assembly = false;
-        showMouths = !showMouths;
-        buttonBPushed = false;
-        zowi.putMouth(happyOpen);
-    }
-
-    if (elapsedTimeMillis - mouthTimeMillis > 1000 && showMouths) {
-        Serial.println("showMouths");
-        int randomMouth = random(10, 24);
-        zowi.putMouth(randomMouth);
-        mouthTimeMillis = millis();
-    } else if (assembly) {
-        Serial.println("assembly");
-        zowi._tone(frecuencies[counter%4], 500, 0);
-        zowi.putMouth(mouths[counter%4]);
-        counter = counter + 1;
-    }
-
-    //refTimeMilis = millis();
-}
 
 //-- Function executed when A button is pushed
 void aButtonPushed() {
@@ -498,6 +415,7 @@ void walkForward() {
 
 void walkBackward() {
     zowi.walk(3, 1000, -1);
+    zowi.home();
 }
 
 void grid() {
